@@ -22,7 +22,7 @@ export const RiddlePreviewModal = ({ riddle, onClose }: RiddlePreviewModalProps)
 
         <div className="mb-6">
           <p className="text-muted-foreground text-lg leading-relaxed">
-            "{riddle.question}"
+            {riddle.question}
           </p>
         </div>
 

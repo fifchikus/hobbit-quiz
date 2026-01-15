@@ -86,7 +86,7 @@ export const RiddleCard = ({ riddle, onCorrectAnswer, onNextRiddle, isLoading }:
       {/* Question */}
       <div className="mb-8">
         <p className="text-muted-foreground text-xl sm:text-2xl leading-relaxed text-center font-display">
-          "{riddle.question}"
+          {riddle.question}
         </p>
       </div>
 
