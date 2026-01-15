@@ -5,6 +5,7 @@ import { VictoryScreen } from '@/components/VictoryScreen';
 import { HobbitNameDialog } from '@/components/HobbitNameDialog';
 import { Riddle } from '@/types/riddle';
 import { getRandomRiddle, MAX_HEIGHT, TOTAL_RIDDLES } from '@/data/riddles';
+import { logEvent, fetchEvents, updateEvent, deleteEventsByPlayer } from '@/lib/api';
 import shireBackground from '@/assets/shire-background.jpg';
 
 // Generate unique player ID
@@ -33,6 +34,12 @@ const Index = () => {
     // Check if game is complete
     if (height >= MAX_HEIGHT || answeredIds.length >= TOTAL_RIDDLES) {
       setIsComplete(true);
+      // Fetch events when game finishes (dev/debugging)
+      if (playerId && process.env.NODE_ENV === 'development') {
+        fetchEvents(playerId).then(events => {
+          console.log('Game finished. Player events:', events);
+        });
+      }
       return;
     }
 
@@ -44,7 +51,7 @@ const Index = () => {
         setIsComplete(true);
       }
     }
-  }, [currentRiddle, answeredIds, height]);
+  }, [currentRiddle, answeredIds, height, playerId]);
 
   // Save answered IDs to localStorage
   useEffect(() => {
@@ -55,36 +62,33 @@ const Index = () => {
   useEffect(() => {
     if (hobbitName && playerId && !hasSentStartData) {
       const sendStartData = async () => {
-        try {
-          const startData = {
-            playerId,
-            hobbitName,
-            timestamp: new Date().toISOString(),
-            eventType: 'game_start',
-          };
-
-          await fetch('https://evgen.pp.ua/webhook/hobbit-quiz', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(startData),
-          });
-          setHasSentStartData(true);
-        } catch (error) {
-          // Silently fail - don't interrupt user experience
-          console.error('Failed to send start data:', error);
-        }
+        await logEvent({
+          playerId,
+          hobbitName,
+          timestamp: new Date().toISOString(),
+          eventType: 'game_start',
+        });
+        setHasSentStartData(true);
       };
 
       sendStartData();
     }
   }, [hobbitName, playerId, hasSentStartData]);
 
-  const handleCorrectAnswer = () => {
+  const handleCorrectAnswer = async () => {
     if (currentRiddle && height < MAX_HEIGHT) {
       grow();
       setAnsweredIds(prev => [...prev, currentRiddle.id]);
+      
+      // Log answer event
+      if (hobbitName && playerId) {
+        await logEvent({
+          playerId,
+          hobbitName,
+          timestamp: new Date().toISOString(),
+          eventType: 'answer',
+        });
+      }
     }
   };
 
@@ -125,6 +129,34 @@ const Index = () => {
     localStorage.setItem('hobbit-player-id', newPlayerId);
   };
 
+  // Dev-only functions for testing webhooks
+  const handleLoadEvents = async () => {
+    if (!playerId) {
+      console.log('No playerId available');
+      return;
+    }
+    const events = await fetchEvents(playerId);
+    console.log('Loaded events:', events);
+  };
+
+  const handleDeleteEvents = async () => {
+    if (!playerId) {
+      console.log('No playerId available');
+      return;
+    }
+    const result = await deleteEventsByPlayer(playerId);
+    if (result) {
+      console.log('Events deleted successfully');
+    }
+  };
+
+  const handleUpdateEvent = async () => {
+    const result = await updateEvent({ id: 1, eventType: 'patched' });
+    if (result) {
+      console.log('Event updated successfully');
+    }
+  };
+
   return (
     <div 
       className="min-h-screen relative"
@@ -158,6 +190,30 @@ const Index = () => {
           />
         )}
       </main>
+
+      {/* Dev-only section for testing webhooks */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-16 left-4 z-20 flex flex-col gap-2">
+          <button
+            onClick={handleLoadEvents}
+            className="px-3 py-1 text-xs bg-secondary/50 text-secondary-foreground rounded border border-secondary hover:bg-secondary/70"
+          >
+            Load my events (GET)
+          </button>
+          <button
+            onClick={handleDeleteEvents}
+            className="px-3 py-1 text-xs bg-destructive/50 text-destructive-foreground rounded border border-destructive hover:bg-destructive/70"
+          >
+            Delete my events (DELETE)
+          </button>
+          <button
+            onClick={handleUpdateEvent}
+            className="px-3 py-1 text-xs bg-primary/50 text-primary-foreground rounded border border-primary hover:bg-primary/70"
+          >
+            Update event #1 (PATCH)
+          </button>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 text-center py-4 z-10">
