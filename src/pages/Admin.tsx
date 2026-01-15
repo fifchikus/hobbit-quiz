@@ -8,6 +8,7 @@ import {
   storeAdminCredentials,
   clearAdminCredentials,
   isAdminAuthenticated,
+  getAdminApiBase,
 } from '@/lib/adminApi';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -126,9 +127,14 @@ const Admin = () => {
         description: message,
         variant: 'destructive',
       });
-      if (message.includes('Unauthorized')) {
+      if (message.includes('Unauthorized') || message.includes('401')) {
         setIsAuthenticated(false);
         clearAdminCredentials();
+        toast({
+          title: 'Session Expired',
+          description: 'Please log in again',
+          variant: 'destructive',
+        });
       }
     }
   };
@@ -152,9 +158,14 @@ const Admin = () => {
         description: message,
         variant: 'destructive',
       });
-      if (message.includes('Unauthorized')) {
+      if (message.includes('Unauthorized') || message.includes('401')) {
         setIsAuthenticated(false);
         clearAdminCredentials();
+        toast({
+          title: 'Session Expired',
+          description: 'Please log in again',
+          variant: 'destructive',
+        });
       }
     }
   };
@@ -216,6 +227,9 @@ const Admin = () => {
           <div>
             <h1 className="text-3xl font-display text-muted-foreground mb-2 font-semibold">Admin Panel</h1>
             <p className="text-muted-foreground">Manage Hobbit Quiz Events</p>
+            <p className="text-xs text-muted-foreground/70 mt-1 font-mono">
+              Connected to {getAdminApiBase()}
+            </p>
           </div>
           <div className="flex gap-2">
             <Button onClick={loadEvents} variant="outline" disabled={loading}>

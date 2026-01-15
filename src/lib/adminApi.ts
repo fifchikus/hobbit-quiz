@@ -5,7 +5,8 @@
 
 import { HobbitQuizEvent, UpdateEventPayload } from '@/types/admin';
 
-const API_BASE = '/api/admin';
+// Use environment variable or fallback to production URL
+const ADMIN_API_BASE = import.meta.env.VITE_ADMIN_API_BASE_URL || 'https://evgen.pp.ua/api/admin';
 
 /**
  * Get stored admin credentials from localStorage
@@ -51,7 +52,7 @@ function createAuthHeaders(): HeadersInit {
  */
 export async function fetchAdminEvents(playerId?: string): Promise<HobbitQuizEvent[]> {
   try {
-    const url = new URL(`${API_BASE}/events`, window.location.origin);
+    const url = new URL(`${ADMIN_API_BASE}/events`);
     if (playerId) {
       url.searchParams.set('playerId', playerId);
     }
@@ -85,7 +86,7 @@ export async function updateAdminEvent(
   payload: UpdateEventPayload
 ): Promise<HobbitQuizEvent> {
   try {
-    const response = await fetch(`${API_BASE}/events/${id}`, {
+    const response = await fetch(`${ADMIN_API_BASE}/events/${id}`, {
       method: 'PATCH',
       headers: createAuthHeaders(),
       body: JSON.stringify(payload),
@@ -113,7 +114,7 @@ export async function updateAdminEvent(
  */
 export async function deleteAdminEvent(id: number): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE}/events/${id}`, {
+    const response = await fetch(`${ADMIN_API_BASE}/events/${id}`, {
       method: 'DELETE',
       headers: createAuthHeaders(),
     });
@@ -151,4 +152,11 @@ export function clearAdminCredentials(): void {
  */
 export function isAdminAuthenticated(): boolean {
   return getAdminCredentials() !== null;
+}
+
+/**
+ * Get the API base URL (for debugging/display)
+ */
+export function getAdminApiBase(): string {
+  return ADMIN_API_BASE;
 }
