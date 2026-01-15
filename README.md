@@ -71,3 +71,67 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Admin Panel
+
+The project includes an admin panel at `/admin` for managing Hobbit Quiz events stored in Postgres.
+
+### Setup
+
+1. **Install backend dependencies:**
+   ```sh
+   cd server
+   npm install
+   ```
+
+2. **Configure environment variables:**
+   Create a `.env` file in the `server/` directory:
+   ```env
+   ADMIN_PASSWORD=your-secure-password-here
+   ADMIN_TOKEN=your-secure-token-here
+   DATABASE_URL=postgresql://user:password@host:port/database
+   PORT=3001
+   ```
+
+3. **Start the backend server:**
+   ```sh
+   cd server
+   npm run dev  # Development mode with auto-reload
+   # or
+   npm start    # Production mode
+   ```
+
+4. **Start the frontend:**
+   ```sh
+   npm run dev
+   ```
+
+### Using the Admin Panel
+
+1. Navigate to `http://localhost:8080/admin`
+2. Log in with:
+   - **Admin Password**: The value from `ADMIN_PASSWORD` env var
+   - **Admin Token** (optional): The value from `ADMIN_TOKEN` env var
+3. Once authenticated, you can:
+   - View all events in a table
+   - Edit hobbit names and event types
+   - Delete events
+   - Refresh the event list
+
+### Authentication
+
+The admin panel supports two authentication methods:
+- **Basic Auth**: Username `admin` with password from `ADMIN_PASSWORD`
+- **Token Auth**: Header `x-admin-token` with value from `ADMIN_TOKEN`
+
+Credentials are stored in browser localStorage after login.
+
+### Database Schema
+
+The admin panel expects a `hobbit_quiz_events` table with these columns:
+- `id` (integer, primary key)
+- `player_id` (text)
+- `hobbit_name` (text)
+- `event_type` (text)
+- `event_timestamp` (timestamp)
+- `created_at` (timestamp)
