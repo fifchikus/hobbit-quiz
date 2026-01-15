@@ -19,7 +19,30 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+import cors from 'cors';
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+const allowedOrigins = [
+  'https://hobbit-quiz.vercel.app',
+  // можна додати локальний для дебага:
+  'http://localhost:8080',
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
+  credentials: false,
+}));
+
+// важливо: обробити preflight
+app.options('*', cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
+}));
 app.use(express.json());
 
 // Postgres connection pool
